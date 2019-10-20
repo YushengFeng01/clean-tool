@@ -84,7 +84,7 @@ class Diacriticals(object):
 
     @property
     def nproc(self):
-        return self._nproc
+        return self._nproc if self._nproc else multiprocessing.cpu_count()-2
 
     @nproc.setter
     def nproc(self, num):
@@ -294,7 +294,6 @@ class Diacriticals(object):
 __all__ = [
     'Diacriticals',
     'ROOTDIR',
-    'collect_diacriticals',
 ]
 
 if __name__ == '__main__':

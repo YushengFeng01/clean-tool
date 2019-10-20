@@ -74,7 +74,7 @@ class DiacriticalsUnitTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             diac.collect_gz_paths()
 
-        diac.data_dir = 'D:\\dev\\normlize_and_folding\\arci_data'
+        diac.data_dir = 'arci_data'
         diac.collect_gz_paths()
         p = os.path.normpath(os.path.join(test_build_dir, 'arci_data.txt'))
         self.assertTrue(os.access(p, os.F_OK))
