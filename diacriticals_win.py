@@ -12,7 +12,6 @@ import argparse
 import signal
 import shutil
 import gzip
-import time
 import sys
 import csv
 import re
@@ -25,13 +24,12 @@ children_pids = []
 
 def build_logger(name="diacriticals"):
     logger = logging.getLogger(name)
-    if not logger.handlers:
-        logger.setLevel(logging.DEBUG)
-        file_name = os.path.normpath(os.path.join(ROOTDIR, name+'.log'))
-        fh = RotatingFileHandler(file_name, mode="a", maxBytes=100*1024*1024, backupCount=10, encoding=None, delay=0)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+    logger.setLevel(logging.DEBUG)
+    file_name = os.path.normpath(os.path.join(ROOTDIR, name+'.log'))
+    fh = RotatingFileHandler(file_name, mode="a", maxBytes=100*1024*1024, backupCount=10, encoding=None, delay=0)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
     return logger
 
 def build_child_logger(name):
@@ -53,6 +51,47 @@ def build_child_logger(name):
         logger.addHandler(fh)
     return logger
 
+def collect_diacriticals(gz_path):
+    # signal.signal(signal.SIGTERM, Diacriticals.child_signal_handler)
+    # signal.signal(signal.SIGINT, Diacriticals.child_signal_handler)
+    logger = build_child_logger(name=str(os.getpid()))
+
+    # Sometimes, this program stops running on aws instance, why?
+    if Diacriticals.child_ready():
+        diacritical_count = {}
+        logger.info(gz_path)
+        with gzip.open(gz_path, 'rb') as gz_file:
+            for record in gz_file:
+                if len(record) < 1:
+                    continue
+
+                tree = etree.parse(StringIO.StringIO(record))
+
+                # Collect diacriticals from "title" elements in arci and superunif xml data.
+                for xp in (Diacriticals.TITLE_IN_ARCI_XPATH, Diacriticals.TITLE_IN_UNIF_XPATH):
+                    titles = tree.xpath(xp)
+                    if len(titles):
+                        for t in titles:
+                            count_ = Diacriticals.diacritical_count(t.text)
+                            for k, v in count_.items():
+                                diacritical_count.setdefault(k, 0)
+                                diacritical_count[k] += v
+
+                # Collect diacriticals from the children of "name" elements in arci and superunif xml data.
+                for xp in (Diacriticals.NAME_IN_ARCI_XPATH, Diacriticals.NAME_IN_UNIF_XPATH):
+                    names = tree.xpath(xp)
+                    if len(names):
+                        for name in names:
+                            for child in name:
+                                count_ = Diacriticals.diacritical_count(child.text)
+                                for k, v in count_.items():
+                                    diacritical_count.setdefault(k, 0)
+                                    diacritical_count[k] += v
+
+        Diacriticals.diacritical_child_report(diacritical_count, gz_path)
+    return gz_path
+
+
 class Diacriticals(object):
     # https://unicode-table.com/en/blocks/latin-extended-additional/
     LATIN_EXTERNAL_PATTERN = re.compile(ur'[\u1E00-\u1EEF]{1}', re.MULTILINE|re.UNICODE)
@@ -67,8 +106,6 @@ class Diacriticals(object):
         self._logger = build_logger()
         self.gz_path = None
         self._data_dir = None
-        self._nproc = None
-        self.create_build_folder()
 
     @property
     def data_dir(self):
@@ -81,20 +118,6 @@ class Diacriticals(object):
             self._logger.error("{0} doesn't exist or you have no permission to access it".format(data_dir))
             raise OSError("{0} doesn't exist or you have no permission to access it".format(data_dir))
         self._logger.info("xml data location: {0}".format(self._data_dir))
-
-    @property
-    def nproc(self):
-        return self._nproc
-
-    @nproc.setter
-    def nproc(self, num):
-        cpu_count = multiprocessing.cpu_count()
-        if not num:
-            self._nproc = cpu_count - 2
-        elif num > cpu_count-2:
-            self._nproc = cpu_count -2
-        else:
-            self._nproc = num
 
     @staticmethod
     def diacritical_count(text):
@@ -191,34 +214,66 @@ class Diacriticals(object):
             self._logger.error("You hasn't specify a data direcotry yet.")
             raise TypeError("You hasn't specify a data direcotry yet.")
 
+    def start(self, func):
+        if self.gz_path:
+            cpu_count = multiprocessing.cpu_count()
+            self._logger.info("CPU count: {0}".format(cpu_count))
+            self._logger.info("main pid: {0}".format(os.getpid()))
+
+            with open(self.gz_path, 'r') as j:
+                gz_l = [p.strip() for p in j]
+
+            nproc = len(gz_l) if len(gz_l) < cpu_count-1 else cpu_count-1
+            self._logger.info("child process count: {0}".format(nproc))
+
+            output_dir = os.path.normpath(os.path.join(Diacriticals.BUILD_DIR, 'output'))
+            os.path.isdir(output_dir) or os.mkdir(output_dir)
+            self._logger.info("the result csv files of each child process is in {0}".format(output_dir))
+
+            def _handler(num, frame):
+                pool.terminate()
+                pool.join()
+                self._logger.warn("process was killed by signal {0}".format(num))
+                sys.exit("process was killed signal by signal {0}".format(num))
+
+            # signal.signal(signal.SIGTERM, _handler)
+            # signal.signal(signal.SIGINT, _handler)
+
+            pool = multiprocessing.Pool(processes=nproc)
+            pool.map_async(func, gz_l)
+            pool.close()
+            pool.join()
+            self._logger.info("Main pid aggregate the children results to generate the final report.")
+            Diacriticals.child_ready() and self.diacritical_report()
+
+        else:
+            self._logger.error("no gz path txt file under build folder.")
+
     @staticmethod
     def main_terminate(num, frame):
-        logger = build_logger()
         for child in children_pids:
             try:
                 os.kill(child, signal.SIGTERM)
             except:
                 pass
-        logger.warn("Main pid {0} was killed".format(os.getpid()))
+        print ("Main pid {0} was killed".format(os.getpid()))
         os._exit(0)
 
     @staticmethod
     def child_terminate(num, frame):
-        pid = os.getpid()
-        logger = build_child_logger(name=str(pid))
-        logger.warn("child process {0} was killed by signal {1}".format(pid, num))
         os._exit(0)
 
-    def start(self,func):
+    def start2(self,func):
         if self.gz_path:
-            signal.signal(signal.SIGTERM, Diacriticals.main_terminate)
-            signal.signal(signal.SIGINT, Diacriticals.main_terminate)
+            signal.signal(signal.SIGTERM, main_terminate)
+            signal.signal(signal.SIGINT, main_terminate)
 
             output_dir = os.path.normpath(os.path.join(Diacriticals.BUILD_DIR, 'output'))
             os.path.isdir(output_dir) or os.mkdir(output_dir)
 
+            nproc = multiprocessing.cpu_count() - 1
             q4jsondata = multiprocessing.Queue(1280)
-            for i in range(0, self.nproc):
+            for i in range(0, nproc):
                 pid = os.fork()
                 if (pid == 0):
                     rval = func(q4jsondata)
@@ -231,7 +286,13 @@ class Diacriticals(object):
                 for gz in gz_files:
                     q4jsondata.put(gz, block=True, timeout=1200)
 
-            for i in range(0, self.nproc):
+            # for i in range(0, nproc):
+            #     try:
+            #         q4jsondata.put('ENDING_FLAG', block=False, timeout=10)
+            #     except:
+            #         pass
+
+            for i in range(0, nproc):
                 try:
                     os.wait()
                 except:
@@ -241,55 +302,55 @@ class Diacriticals(object):
         else:
             self._logger.error("no gz path txt file under build folder.")
 
-    @staticmethod
-    def collect_diacriticals(q4jsondata):
-        logger = build_child_logger(name=str(os.getpid()))
-        signal.signal(signal.SIGTERM, Diacriticals.child_terminate)
-        signal.signal(signal.SIGINT, Diacriticals.child_terminate)
+def collect_diacriticals2(q4jsondata):
+    logger = build_child_logger(name=str(os.getpid()))
+    signal.signal(signal.SIGTERM, Diacriticals.child_terminate)
+    signal.signal(signal.SIGINT, Diacriticals.child_terminate)
 
-        while True:
-            try:
-                gz_path = q4jsondata.get(block=True, timeout=20)
-            except:
-                # Queue is empty, and child should exit.
-                os._exit(0)
+    while True:
+        try:
+            gz_path = q4jsondata.get(block=True, timeout=20)
+            # if (gz_path == 'ENDING_FLAG'):
+            #     os._exit(0)
+        except:
+            os._exit(0)
 
-            gz_path = os.path.normpath(gz_path.strip())
+        gz_path = os.path.normpath(gz_path.strip())
 
-            # Sometimes, this program stops running on aws instance, why?
-            if Diacriticals.child_ready():
-                diacritical_count = {}
-                logger.info(gz_path)
-                with gzip.open(gz_path, 'rb') as gz_file:
-                    for record in gz_file:
-                        if len(record) < 1:
-                            continue
+        # Sometimes, this program stops running on aws instance, why?
+        if Diacriticals.child_ready():
+            diacritical_count = {}
+            logger.info(gz_path)
+            with gzip.open(gz_path, 'rb') as gz_file:
+                for record in gz_file:
+                    if len(record) < 1:
+                        continue
 
-                        tree = etree.parse(StringIO.StringIO(record))
+                    tree = etree.parse(StringIO.StringIO(record))
 
-                        # Collect diacriticals from "title" elements in arci and superunif xml data.
-                        for xp in (Diacriticals.TITLE_IN_ARCI_XPATH, Diacriticals.TITLE_IN_UNIF_XPATH):
-                            titles = tree.xpath(xp)
-                            if len(titles):
-                                for t in titles:
-                                    count_ = Diacriticals.diacritical_count(t.text)
+                    # Collect diacriticals from "title" elements in arci and superunif xml data.
+                    for xp in (Diacriticals.TITLE_IN_ARCI_XPATH, Diacriticals.TITLE_IN_UNIF_XPATH):
+                        titles = tree.xpath(xp)
+                        if len(titles):
+                            for t in titles:
+                                count_ = Diacriticals.diacritical_count(t.text)
+                                for k, v in count_.items():
+                                    diacritical_count.setdefault(k, 0)
+                                    diacritical_count[k] += v
+
+                    # Collect diacriticals from the children of "name" elements in arci and superunif xml data.
+                    for xp in (Diacriticals.NAME_IN_ARCI_XPATH, Diacriticals.NAME_IN_UNIF_XPATH):
+                        names = tree.xpath(xp)
+                        if len(names):
+                            for name in names:
+                                for child in name:
+                                    count_ = Diacriticals.diacritical_count(child.text)
                                     for k, v in count_.items():
                                         diacritical_count.setdefault(k, 0)
                                         diacritical_count[k] += v
 
-                        # Collect diacriticals from the children of "name" elements in arci and superunif xml data.
-                        for xp in (Diacriticals.NAME_IN_ARCI_XPATH, Diacriticals.NAME_IN_UNIF_XPATH):
-                            names = tree.xpath(xp)
-                            if len(names):
-                                for name in names:
-                                    for child in name:
-                                        count_ = Diacriticals.diacritical_count(child.text)
-                                        for k, v in count_.items():
-                                            diacritical_count.setdefault(k, 0)
-                                            diacritical_count[k] += v
-
-                Diacriticals.diacritical_child_report(diacritical_count, gz_path)
-        return gz_path
+            Diacriticals.diacritical_child_report(diacritical_count, gz_path)
+    return gz_path
 
 __all__ = [
     'Diacriticals',
@@ -299,12 +360,11 @@ __all__ = [
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d','--data_dir', help='The root dir of json gz data files.', required=True, default="")
-    parser.add_argument('-n', '--procnum', help='The number of child processes used to collect diacriticals.', required=False, default=None)
+    parser.add_argument('--data_dir', help='The root dir of json gz data files.', required=True, default="")
     args = parser.parse_args()
 
     diac = Diacriticals()
+    diac.create_build_folder()
     diac.data_dir = args.data_dir
-    diac.nproc = args.procnum
     diac.collect_gz_paths()
-    diac.start(Diacriticals.collect_diacriticals)
+    diac.start2(collect_diacriticals2)
