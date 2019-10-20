@@ -55,7 +55,10 @@ def build_child_logger(name):
 
 class Diacriticals(object):
     # https://unicode-table.com/en/blocks/latin-extended-additional/
-    LATIN_EXTERNAL_PATTERN = re.compile(ur'[\u1E00-\u1EEF]{1}', re.MULTILINE|re.UNICODE)
+    # # https://unicode-table.com/en/blocks/latin-1-supplement/
+    # https://unicode-table.com/en/blocks/latin-extended-a/
+    # https://unicode-table.com/en/blocks/latin-extended-b/
+    LATIN_EXTERNAL_PATTERN = re.compile(ur'[\u1E00-\u1EEF\u0080-\u00FF\u0100-\u017F\u0180-\u024F]{1}', re.MULTILINE|re.UNICODE)
     TITLE_IN_ARCI_XPATH = '/REC/static_data/summary/titles/title[@transliterated=\'Y\']'
     NAME_IN_ARCI_XPATH = '/REC/static_data/summary/names/name[@transliterated=\'Y\']'
     TITLE_IN_UNIF_XPATH = '/REC/static_data/specific_content/summary/titles/title[@transliterated=\'Y\']'
