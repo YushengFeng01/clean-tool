@@ -26,7 +26,7 @@ class FunctionalTest(unittest.TestCase):
         # We collect all the gz file paths into a txt file in the "build" folder.
         # The name of this txt file should be the data directory name, e.g arci_data.txt
         # python diacriticals.py --data_dir=D:\\dev\\normlize_and_folding\\batch14
-        diac.data_dir = 'batch14'
+        diac.data_dir = '../batch14'
         diac.collect_gz_paths()
 
         # We have already collected all the gz file paths under the data directory.

@@ -92,7 +92,7 @@ class Diacriticals(object):
     @nproc.setter
     def nproc(self, num):
         cpu_count = multiprocessing.cpu_count()
-        if not num:
+        if num < 0 or not num:
             self._nproc = cpu_count - 2
         elif num > cpu_count-2:
             self._nproc = cpu_count -2
@@ -216,6 +216,7 @@ class Diacriticals(object):
         if self.gz_path:
             signal.signal(signal.SIGTERM, Diacriticals.main_terminate)
             signal.signal(signal.SIGINT, Diacriticals.main_terminate)
+            self._logger.info("The main pid is {0}".format(os.getpid()))
 
             output_dir = os.path.normpath(os.path.join(Diacriticals.BUILD_DIR, 'output'))
             os.path.isdir(output_dir) or os.mkdir(output_dir)
