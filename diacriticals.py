@@ -62,8 +62,8 @@ class Diacriticals(object):
     NON_ASCII_PATTERN = re.compile(ur'[^\u0000-\u007f]{1}', re.MULTILINE|re.UNICODE)
     TITLE_IN_ARCI_XPATH = '/REC/static_data/summary/titles/title[@transliterated=\'Y\']'
     NAME_IN_ARCI_XPATH = '/REC/static_data/summary/names/name[@transliterated=\'Y\']'
-    TITLE_IN_UNIF_XPATH = '/REC/static_data/specific_content[@coll_id='ARCI']/summary/titles/title[@transliterated=\'Y\']'
-    NAME_IN_UNIF_XPATH = '/REC/static_data/specific_content[@coll_id='ARCI']/summary/names/name[@transliterated=\'Y\']'
+    TITLE_IN_UNIF_XPATH = '/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/titles/title[@transliterated=\'Y\']'
+    NAME_IN_UNIF_XPATH = '/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/names/name[@transliterated=\'Y\']'
     BUILD_DIR = os.path.normpath(os.path.join(ROOTDIR, 'build'))
 
     def __init__(self):
