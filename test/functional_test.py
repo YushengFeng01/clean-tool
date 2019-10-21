@@ -76,11 +76,8 @@ class DiacriticalFunctionalTest(unittest.TestCase):
         self.assertEqual(len(no_gz_files), 0)
 
         # The script generate 2 child porcesses to collect diacriticals from these gz files, listed in build/batch14.txt.
-        # NOTE: we collect these characters in these 4 unicode tables:
-        # https://unicode-table.com/en/blocks/latin-extended-additional/
-        # # https://unicode-table.com/en/blocks/latin-1-supplement/
-        # https://unicode-table.com/en/blocks/latin-extended-a/
-        # https://unicode-table.com/en/blocks/latin-extended-b/
+        # The script scans the "title" and "name" elements in the xml files, and collects all the non-ascii
+        # character.
         diac.start(Diacriticals.collect_diacriticals)
 
         # The file build/diacritical_count.txt is the result report.
