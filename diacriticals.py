@@ -59,6 +59,7 @@ class Diacriticals(object):
     # https://unicode-table.com/en/blocks/latin-extended-a/
     # https://unicode-table.com/en/blocks/latin-extended-b/
     LATIN_EXTERNAL_PATTERN = re.compile(ur'[\u1E00-\u1EEF\u0080-\u00FF\u0100-\u017F\u0180-\u024F]{1}', re.MULTILINE|re.UNICODE)
+    NON_ASCII_PATTERN = re.compile(ur'[^\u0000-\u007f]{1}', re.MULTILINE|re.UNICODE)
     TITLE_IN_ARCI_XPATH = '/REC/static_data/summary/titles/title[@transliterated=\'Y\']'
     NAME_IN_ARCI_XPATH = '/REC/static_data/summary/names/name[@transliterated=\'Y\']'
     TITLE_IN_UNIF_XPATH = '/REC/static_data/specific_content/summary/titles/title[@transliterated=\'Y\']'
@@ -104,7 +105,8 @@ class Diacriticals(object):
         count = {}
         text_in_unicode = text.decode('utf-8') if not isinstance(text, unicode) else text
         text_in_unicode = unicodedata.normalize('NFKC', text_in_unicode)
-        latins = re.findall(Diacriticals.LATIN_EXTERNAL_PATTERN, text_in_unicode)
+        # latins = re.findall(Diacriticals.LATIN_EXTERNAL_PATTERN, text_in_unicode)
+        latins = re.findall(Diacriticals.NON_ASCII_PATTERN, text_in_unicode)
         for d in latins:
             d = d.encode('utf-8')
             count.setdefault(d, 0)
