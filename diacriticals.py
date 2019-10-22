@@ -96,13 +96,14 @@ class Diacriticals(object):
         if num < 0 or not num:
             self._nproc = cpu_count - 2
         elif num > cpu_count-2:
-            self._nproc = cpu_count -2
+            self._nproc = cpu_count - 2
         else:
             self._nproc = num
 
     @staticmethod
-    def diacritical_count(text):
+    def diacritical_count(text, field):
         count = {}
+        additional_info = {}
         text_in_unicode = text.decode('utf-8') if not isinstance(text, unicode) else text
         text_in_unicode = unicodedata.normalize('NFKC', text_in_unicode)
         # latins = re.findall(Diacriticals.LATIN_EXTERNAL_PATTERN, text_in_unicode)
@@ -112,6 +113,12 @@ class Diacriticals(object):
             count.setdefault(d, 0)
             count[d] += 1
 
+            additional_info.setdefault(d, {})
+            additional_info[d].setdefault('Fields', set())
+            additional_info[d]['Fields'].add(field)
+            additional_info[d].setdefault('Example', None)
+            if not additional_info[d]['Example']:
+                additional_info[d]['Example'] = text
         return count
 
     @staticmethod
@@ -278,7 +285,7 @@ class Diacriticals(object):
                             titles = tree.xpath(xp)
                             if len(titles):
                                 for t in titles:
-                                    count_ = Diacriticals.diacritical_count(t.text)
+                                    count_ = Diacriticals.diacritical_count(t.text, t.tag)
                                     for k, v in count_.items():
                                         diacritical_count.setdefault(k, 0)
                                         diacritical_count[k] += v
@@ -289,13 +296,12 @@ class Diacriticals(object):
                             if len(names):
                                 for name in names:
                                     for child in name:
-                                        count_ = Diacriticals.diacritical_count(child.text)
+                                        count_ = Diacriticals.diacritical_count(child.text, 'name/'+child.tag)
                                         for k, v in count_.items():
                                             diacritical_count.setdefault(k, 0)
                                             diacritical_count[k] += v
 
                 Diacriticals.diacritical_child_report(diacritical_count, gz_path)
-        return gz_path
 
 __all__ = [
     'Diacriticals',

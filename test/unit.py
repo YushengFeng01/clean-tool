@@ -39,28 +39,28 @@ class DiacriticalsUnitTest(unittest.TestCase):
 
     def test_collect_diacriticals_from_a_text(self):
         diac = Diacriticals()
-        diacriticals = diac.diacritical_count(test_data)
+        diacriticals = diac.diacritical_count(test_data, 'title')
         for k, v in diacriticals.items():
             print("{0}: {1}".format(k, v))
 
     def test_collect_latin_supplement_from_a_text(self):
         diac = Diacriticals()
         print('LATIN SUPPLEMENT')
-        diacriticals = diac.diacritical_count(latin_supplment_data)
+        diacriticals = diac.diacritical_count(latin_supplment_data, 'title')
         for k, v in diacriticals.items():
             print("{0}: {1}".format(k, v))
 
     def test_collect_latin_extended_a_from_a_text(self):
         diac = Diacriticals()
         print('LATIN EXTENDED a')
-        diacriticals = diac.diacritical_count(latin_extend_a_data)
+        diacriticals = diac.diacritical_count(latin_extend_a_data, 'title')
         for k, v in diacriticals.items():
             print("{0}: {1}".format(k, v))
 
     def test_collect_latin_extended_b_from_a_text(self):
         diac = Diacriticals()
         print('LATIN EXTENDED b')
-        diacriticals = diac.diacritical_count(latin_extend_b_data)
+        diacriticals = diac.diacritical_count(latin_extend_b_data, 'title')
         for k, v in diacriticals.items():
             print("{0}: {1}".format(k, v))
 
@@ -82,7 +82,6 @@ class DiacriticalsUnitTest(unittest.TestCase):
             os.path.normpath(test_build_dir)
         ))
         diac = Diacriticals()
-        diac.create_build_folder()
         self.assertTrue(os.path.isdir(
             os.path.normpath(test_build_dir)
         ))
@@ -93,7 +92,6 @@ class DiacriticalsUnitTest(unittest.TestCase):
         self.assertGreater(len(os.listdir(test_build_dir)), 0)
 
         diac = Diacriticals()
-        diac.create_build_folder()
         self.assertTrue(os.path.isdir(
             os.path.normpath(test_build_dir)
         ))
@@ -104,20 +102,8 @@ class DiacriticalsUnitTest(unittest.TestCase):
         with self.assertRaises(OSError):
             diac.data_dir = "./nonexist/"
 
-    def test_collect_gz_paths_in_data_directory(self):
-        diac = Diacriticals()
-        diac.create_build_folder()
-        with self.assertRaises(TypeError):
-            diac.collect_gz_paths()
-
-        diac.data_dir = 'arci_data'
-        diac.collect_gz_paths()
-        p = os.path.normpath(os.path.join(test_build_dir, 'arci_data.txt'))
-        self.assertTrue(os.access(p, os.F_OK))
-        with open(p, 'r') as f:
-            gz_path = [_.strip() for _ in f]
-        self.assertListEqual(gz_path, [os.path.normpath(os.path.join(diac.data_dir, 'arci.gz')),
-            os.path.normpath(os.path.join(diac.data_dir, 'superunif.txt.gz'))])
+    def test_collect_gz_paths(self):
+        pass
 
 
     @classmethod

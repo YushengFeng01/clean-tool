@@ -68,7 +68,6 @@ class DiacriticalFunctionalTest(unittest.TestCase):
         # The program collect all the file paths, which end with ".gz" in a txt file, named with
         # data directory base name, batch14.txt.
         diac.collect_gz_paths()
-        print(GZ_LIST_FILE)
         self.assertTrue(os.access(GZ_LIST_FILE, os.F_OK))
         # The directory  "../batch14/collection=SUPERUNIF" has a file "_SUCCESS", it doesn't end with ".gz"
         # This file doesn't appear in "batch14.txt" file.
