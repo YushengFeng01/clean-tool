@@ -39,28 +39,28 @@ class DiacriticalsUnitTest(unittest.TestCase):
 
     def test_collect_diacriticals_from_a_text(self):
         diac = Diacriticals()
-        diacriticals = diac.diacritical_count(test_data, 'title')
+        diacriticals, _ = diac.diacritical_count(test_data)
         for k, v in diacriticals.items():
             print("{0}: {1}".format(k, v))
 
     def test_collect_latin_supplement_from_a_text(self):
         diac = Diacriticals()
         print('LATIN SUPPLEMENT')
-        diacriticals = diac.diacritical_count(latin_supplment_data, 'title')
+        diacriticals, _ = diac.diacritical_count(latin_supplment_data)
         for k, v in diacriticals.items():
             print("{0}: {1}".format(k, v))
 
     def test_collect_latin_extended_a_from_a_text(self):
         diac = Diacriticals()
         print('LATIN EXTENDED a')
-        diacriticals = diac.diacritical_count(latin_extend_a_data, 'title')
+        diacriticals, _ = diac.diacritical_count(latin_extend_a_data)
         for k, v in diacriticals.items():
             print("{0}: {1}".format(k, v))
 
     def test_collect_latin_extended_b_from_a_text(self):
         diac = Diacriticals()
         print('LATIN EXTENDED b')
-        diacriticals = diac.diacritical_count(latin_extend_b_data, 'title')
+        diacriticals, _ = diac.diacritical_count(latin_extend_b_data)
         for k, v in diacriticals.items():
             print("{0}: {1}".format(k, v))
 
