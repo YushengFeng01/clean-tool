@@ -6,6 +6,8 @@ import os
 
 from diacriticals import *
 
+TEST_DATA = '../XML'
+GZ_LIST_FILE = os.path.join('../build', os.path.basename(TEST_DATA)+'.txt')
 
 class DiacriticalFunctionalTest(unittest.TestCase):
     """
@@ -43,7 +45,7 @@ class DiacriticalFunctionalTest(unittest.TestCase):
             diac.data_dir = 'nonexist'
 
         # The data directory must exist and you have the permission to access it.
-        diac.data_dir = '../batch14'
+        diac.data_dir = TEST_DATA
 
         # The number of child processes is from 1 to cpu_count-2
         # The default number of child porcesses is cpu_count-2
@@ -66,10 +68,11 @@ class DiacriticalFunctionalTest(unittest.TestCase):
         # The program collect all the file paths, which end with ".gz" in a txt file, named with
         # data directory base name, batch14.txt.
         diac.collect_gz_paths()
-        self.assertTrue(os.access('../build/batch14.txt', os.F_OK))
+        print(GZ_LIST_FILE)
+        self.assertTrue(os.access(GZ_LIST_FILE, os.F_OK))
         # The directory  "../batch14/collection=SUPERUNIF" has a file "_SUCCESS", it doesn't end with ".gz"
         # This file doesn't appear in "batch14.txt" file.
-        with open('../build/batch14.txt', 'r') as f:
+        with open(GZ_LIST_FILE, 'r') as f:
             gz_files = [i.strip() for i in f]
         self.assertNotIn('_SUCCESS', gz_files)
         no_gz_files = [i for i in gz_files if not i.endswith(".gz")]
