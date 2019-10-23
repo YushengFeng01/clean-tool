@@ -4,7 +4,7 @@ This module is used to retrieve diacritical characters from our arci and superun
 '''
 import logging
 from logging.handlers import RotatingFileHandler
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import multiprocessing
 import unicodedata
 import StringIO
@@ -12,7 +12,6 @@ import argparse
 import signal
 import shutil
 import gzip
-import time
 import sys
 import csv
 import re
@@ -120,15 +119,16 @@ class Diacriticals(object):
         csv_report = os.path.normpath(os.path.join(output_dir, pid))
         has_report = os.access(csv_report, os.F_OK)
         with open(csv_report, 'a') as report:
-            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'gz_file', 'Field', 'Example'])
+            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'addition'])
             has_report or csv_writer.writeheader()
             for k, i in count_dict.items():
+                f = list(i['Field'])
+                e = i['Examples'].values()
+                field_example = zip(f, e)
                 csv_writer.writerow({
                     'diacriticals': k,
                     'count': i['count'],
-                    'gz_file': gz_file_path,
-                    'Field': list(i['Field']),
-                    'Example': i['Example']
+                    'addition': field_example
                 })
 
     @staticmethod
@@ -151,6 +151,7 @@ class Diacriticals(object):
 
     def diacritical_report(self):
         count = {}
+        addition = {}
         child_report_count = 0
         children_dir = os.path.normpath(os.path.join(Diacriticals.BUILD_DIR, 'output'))
         for root, subdir, files in os.walk(children_dir):
@@ -160,8 +161,20 @@ class Diacriticals(object):
                 with open(report, 'r') as csv_report:
                     csv_reader = csv.DictReader(csv_report)
                     for row in csv_reader:
-                        count.setdefault(row['diacriticals'], 0)
-                        count[row['diacriticals']] += int(row['count'])
+                        k = row['diacriticals']
+                        count.setdefault(k, 0)
+                        count[k] += int(row['count'])
+
+                        # "[('wos_standard', 'Sald\xc3\xadvar, Jos\xc3\xa9 David'), ('display_name', 'Sald\xc3\xadvar, Jos\xc3\xa9 David')]"
+                        def _remove_extra_character(string):
+                            s_ = string.replace('[(', '')
+                            s_ = s_.replace(')]', '')
+                            s_ = s_.replace(')', '')
+                            s_ = s_.replace('(', '')
+                            return s_
+
+                        if k not in addition:
+                            addition[k] = _remove_extra_character(row['addition'])
 
         self._logger.info("{0} child reports are in {1}".format(child_report_count, children_dir))
         count = OrderedDict(sorted(count.items(), key=lambda t:t[1], reverse=True))
@@ -171,7 +184,12 @@ class Diacriticals(object):
             for k, v in count.items():
                 unicode_char = k if isinstance(k, unicode) else k.decode('utf-8')
                 unicode_name = unicodedata.name(unicode_char)
-                file.write(k+','+' '*5+str(v)+','+' '*5+unicode_name.lower()+'\n')
+                # https://stackoverflow.com/questions/7291120/get-unicode-code-point-of-a-character-using-python
+                code_point = unicode_char.encode('unicode_escape')
+                # https://stackoverflow.com/questions/4182603/how-to-convert-a-string-to-utf-8-in-python
+                a = addition[k]
+                file.write(k+','+' '*5+str(v)+','+' '*5+code_point+','+ ' '*5+unicode_name.lower()+',' +' '*5+a+'\n')
+                break
 
 
     def create_build_folder(self):
@@ -251,15 +269,6 @@ class Diacriticals(object):
             self._logger.error("no gz path txt file under build folder.")
 
     @staticmethod
-    def _additional(element):
-        text = element.text
-        text_in_unicode = text.decode('utf-8') if not isinstance(text, unicode) else text
-        return {
-            'Field': element.tag,
-            'Example': text_in_unicode
-        }
-
-    @staticmethod
     def collect_diacriticals(q4jsondata):
         logger = build_child_logger(name=str(os.getpid()))
         signal.signal(signal.SIGTERM, Diacriticals.child_terminate)
@@ -299,9 +308,11 @@ class Diacriticals(object):
                                         diacritical_count[k].setdefault('Field', set())
                                         diacritical_count[k]['Field'].add(t.tag)
 
-                                        diacritical_count[k].setdefault('Example', None)
-                                        if not diacritical_count[k]['Example']:
-                                            diacritical_count[k]['Example'] = t.text.encode("utf-8")
+                                        diacritical_count[k].setdefault('Examples', {})
+                                        examples = diacritical_count[k]['Examples']
+                                        if t.tag not in examples:
+                                            t_ = t.text.encode('utf-8') if isinstance(t.text, unicode) else t.text
+                                            examples[t.tag] = t_
 
                         # Collect diacriticals from the children of "name" elements in arci and superunif xml data.
                         for xp in (Diacriticals.NAME_IN_ARCI_XPATH, Diacriticals.NAME_IN_UNIF_XPATH):
@@ -318,10 +329,11 @@ class Diacriticals(object):
                                             diacritical_count[k].setdefault('Field', set())
                                             diacritical_count[k]['Field'].add(child.tag)
 
-                                            diacritical_count[k].setdefault('Example', None)
-                                            if not diacritical_count[k]['Example']:
-                                                # Python csv doesn't support unicode
-                                                diacritical_count[k]['Example'] = child.text.encode('utf-8')
+                                            diacritical_count[k].setdefault('Examples', {})
+                                            examples = diacritical_count[k]['Examples']
+                                            if child.tag not in examples:
+                                                t_ = child.text.encode('utf-8') if isinstance(child.text, unicode) else child.text
+                                                examples[child.tag] = t_
 
                 Diacriticals.diacritical_child_report(diacritical_count, gz_path)
 

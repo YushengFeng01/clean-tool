@@ -6,7 +6,7 @@ import os
 
 from diacriticals import *
 
-TEST_DATA = '../XML'
+TEST_DATA = '../XML/batch14'
 GZ_LIST_FILE = os.path.join('../build', os.path.basename(TEST_DATA)+'.txt')
 
 class DiacriticalFunctionalTest(unittest.TestCase):
