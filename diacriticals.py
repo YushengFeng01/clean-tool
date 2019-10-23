@@ -119,16 +119,18 @@ class Diacriticals(object):
         csv_report = os.path.normpath(os.path.join(output_dir, pid))
         has_report = os.access(csv_report, os.F_OK)
         with open(csv_report, 'a') as report:
-            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'addition'])
+            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'addition', 'example'])
             has_report or csv_writer.writeheader()
             for k, i in count_dict.items():
                 f = list(i['Field'])
                 e = i['Examples'].values()
                 field_example = zip(f, e)
+                f2 = ['| '.join([p[0], p[1]]) for p in field_example]
+                f3 = '| '.join(f2)
                 csv_writer.writerow({
                     'diacriticals': k,
                     'count': i['count'],
-                    'addition': field_example
+                    'addition': f3
                 })
 
     @staticmethod
@@ -174,7 +176,7 @@ class Diacriticals(object):
                             return s_
 
                         if k not in addition:
-                            addition[k] = _remove_extra_character(row['addition'])
+                            addition[k] = row['addition']
 
         self._logger.info("{0} child reports are in {1}".format(child_report_count, children_dir))
         count = OrderedDict(sorted(count.items(), key=lambda t:t[1], reverse=True))
@@ -186,10 +188,7 @@ class Diacriticals(object):
                 unicode_name = unicodedata.name(unicode_char)
                 # https://stackoverflow.com/questions/7291120/get-unicode-code-point-of-a-character-using-python
                 code_point = unicode_char.encode('unicode_escape')
-                # https://stackoverflow.com/questions/4182603/how-to-convert-a-string-to-utf-8-in-python
-                a = addition[k]
-                file.write(k+','+' '*5+str(v)+','+' '*5+code_point+','+ ' '*5+unicode_name.lower()+',' +' '*5+a+'\n')
-                break
+                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|' +' '*5+addition[k]+'\n')
 
 
     def create_build_folder(self):
