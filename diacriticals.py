@@ -125,8 +125,8 @@ class Diacriticals(object):
                 f = list(i['Field'])
                 e = i['Examples'].values()
                 field_example = zip(f, e)
-                f2 = ['| '.join([p[0], p[1]]) for p in field_example]
-                f3 = '| '.join(f2)
+                f2 = ['|'.join([p[0], p[1]]) for p in field_example]
+                f3 = '|'.join(f2)
                 csv_writer.writerow({
                     'diacriticals': k,
                     'count': i['count'],
@@ -166,14 +166,6 @@ class Diacriticals(object):
                         k = row['diacriticals']
                         count.setdefault(k, 0)
                         count[k] += int(row['count'])
-
-                        # "[('wos_standard', 'Sald\xc3\xadvar, Jos\xc3\xa9 David'), ('display_name', 'Sald\xc3\xadvar, Jos\xc3\xa9 David')]"
-                        def _remove_extra_character(string):
-                            s_ = string.replace('[(', '')
-                            s_ = s_.replace(')]', '')
-                            s_ = s_.replace(')', '')
-                            s_ = s_.replace('(', '')
-                            return s_
 
                         if k not in addition:
                             addition[k] = row['addition']
@@ -290,6 +282,8 @@ class Diacriticals(object):
                     for record in gz_file:
                         if len(record) < 1:
                             continue
+
+                        # TODO: extract collection and doc_id.
 
                         tree = etree.parse(StringIO.StringIO(record))
 

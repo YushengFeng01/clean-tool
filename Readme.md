@@ -14,5 +14,5 @@
 ~~2. Modify the process of gerneating final report.~~
 ~~3. Some characters don't appear in excel.~~
 
-1. Add "collection" and "doc id" columns.
+1. Add "collection" and "doc id" columns after each "Example" column.
 2. Add more unit test cases, e.g `child process result validation`
