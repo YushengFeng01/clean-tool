@@ -119,7 +119,7 @@ class Diacriticals(object):
         csv_report = os.path.normpath(os.path.join(output_dir, pid))
         has_report = os.access(csv_report, os.F_OK)
         with open(csv_report, 'a') as report:
-            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'addition', 'example'])
+            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'addition', 'collection'])
             has_report or csv_writer.writeheader()
             for k, i in count_dict.items():
                 f = list(i['Field'])
@@ -130,7 +130,8 @@ class Diacriticals(object):
                 csv_writer.writerow({
                     'diacriticals': k,
                     'count': i['count'],
-                    'addition': f3
+                    'addition': f3,
+                    'collection': '/'.join(i['collection'])
                 })
 
     @staticmethod
@@ -167,6 +168,7 @@ class Diacriticals(object):
     def diacritical_report(self):
         count = {}
         addition = {}
+        collection = {}
         child_report_count = 0
         children_dir = os.path.normpath(os.path.join(Diacriticals.BUILD_DIR, 'output'))
         for root, subdir, files in os.walk(children_dir):
@@ -179,6 +181,9 @@ class Diacriticals(object):
                         k = row['diacriticals']
                         count.setdefault(k, 0)
                         count[k] += int(row['count'])
+
+                        collection.setdefault(k, set())
+                        collection[k].add(row['collection'])
 
                         if k in addition:
                             addition[k] = Diacriticals.union_addition_info(addition[k], row['addition'])
@@ -195,7 +200,8 @@ class Diacriticals(object):
                 unicode_name = unicodedata.name(unicode_char)
                 # https://stackoverflow.com/questions/7291120/get-unicode-code-point-of-a-character-using-python
                 code_point = unicode_char.encode('unicode_escape')
-                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|' +' '*5+addition[k]+'\n')
+                c_ = '/'.join(list(collection[k]))
+                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|' +' '*5+addition[k]+'\n')
 
 
     def create_build_folder(self):
@@ -299,6 +305,7 @@ class Diacriticals(object):
                             continue
 
                         # TODO: extract collection and doc_id.
+                        collection = gz_path.rpartition('collection=')[2].split('/')[0]
 
                         tree = etree.parse(StringIO.StringIO(record))
 
@@ -312,6 +319,9 @@ class Diacriticals(object):
                                         diacritical_count.setdefault(k, {})
                                         diacritical_count[k].setdefault('count', 0)
                                         diacritical_count[k]['count'] += v
+
+                                        diacritical_count[k].setdefault('collection', [])
+                                        collection in diacritical_count[k]['collection'] or diacritical_count[k]['collection'].append(collection)
 
                                         diacritical_count[k].setdefault('Field', set())
                                         diacritical_count[k]['Field'].add(t.tag)
@@ -333,6 +343,9 @@ class Diacriticals(object):
                                             diacritical_count.setdefault(k, {})
                                             diacritical_count[k].setdefault('count', 0)
                                             diacritical_count[k]['count'] += v
+
+                                            diacritical_count[k].setdefault('collection', [])
+                                            collection in diacritical_count[k]['collection'] or diacritical_count[k]['collection'].append(collection)
 
                                             diacritical_count[k].setdefault('Field', set())
                                             diacritical_count[k]['Field'].add(child.tag)
