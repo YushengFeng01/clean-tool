@@ -209,7 +209,8 @@ class Diacriticals(object):
                 code_point = unicode_char.encode('unicode_escape')
                 c_ = '/'.join(list(collection[k]))
                 ids = ', '.join(list(doc_id[k]))
-                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|'+' '*5+ids+'|'+' '*5+addition[k]+'\n')
+                id_count = len(doc_id[k])
+                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|'+' '*5+str(id_count)+'|'+' '*5+ids+'|'+' '*5+addition[k]+'\n')
 
 
     def create_build_folder(self):
