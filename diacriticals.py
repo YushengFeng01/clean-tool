@@ -63,6 +63,8 @@ class Diacriticals(object):
     NAME_IN_ARCI_XPATH = '/REC/static_data/summary/names/name[@transliterated=\'Y\']'
     TITLE_IN_UNIF_XPATH = '/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/titles/title[@transliterated=\'Y\']'
     NAME_IN_UNIF_XPATH = '/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/names/name[@transliterated=\'Y\']'
+    DOCID_IN_UNIF_XPATH = '/REC/doc_id'
+    DOCID_IN_ARCI_XPATH = '/REC/static_data/summary/EWUID/WUID/@doc_id'
     BUILD_DIR = os.path.normpath(os.path.join(ROOTDIR, 'build'))
 
     def __init__(self):
@@ -119,7 +121,7 @@ class Diacriticals(object):
         csv_report = os.path.normpath(os.path.join(output_dir, pid))
         has_report = os.access(csv_report, os.F_OK)
         with open(csv_report, 'a') as report:
-            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'addition', 'collection'])
+            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'addition', 'collection', 'doc_id'])
             has_report or csv_writer.writeheader()
             for k, i in count_dict.items():
                 f = list(i['Field'])
@@ -131,7 +133,8 @@ class Diacriticals(object):
                     'diacriticals': k,
                     'count': i['count'],
                     'addition': f3,
-                    'collection': '/'.join(i['collection'])
+                    'collection': '/'.join(i['collection']),
+                    'doc_id': ', '.join(i['doc_id'])
                 })
 
     @staticmethod
@@ -169,6 +172,7 @@ class Diacriticals(object):
         count = {}
         addition = {}
         collection = {}
+        doc_id = {}
         child_report_count = 0
         children_dir = os.path.normpath(os.path.join(Diacriticals.BUILD_DIR, 'output'))
         for root, subdir, files in os.walk(children_dir):
@@ -184,6 +188,9 @@ class Diacriticals(object):
 
                         collection.setdefault(k, set())
                         collection[k].add(row['collection'])
+
+                        doc_id.setdefault(k, set())
+                        doc_id[k].add(row['doc_id'])
 
                         if k in addition:
                             addition[k] = Diacriticals.union_addition_info(addition[k], row['addition'])
@@ -201,7 +208,8 @@ class Diacriticals(object):
                 # https://stackoverflow.com/questions/7291120/get-unicode-code-point-of-a-character-using-python
                 code_point = unicode_char.encode('unicode_escape')
                 c_ = '/'.join(list(collection[k]))
-                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|' +' '*5+addition[k]+'\n')
+                ids = ', '.join(list(doc_id[k]))
+                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|'+' '*5+ids+'|'+' '*5+addition[k]+'\n')
 
 
     def create_build_folder(self):
@@ -281,6 +289,20 @@ class Diacriticals(object):
             self._logger.error("no gz path txt file under build folder.")
 
     @staticmethod
+    def extract_doc_id(xml_doc, collection):
+        tree = etree.parse(xml_doc)
+        ids = []
+
+        if collection == 'SUPERUNIF':
+            doc_id = tree.xpath(Diacriticals.DOCID_IN_UNIF_XPATH)
+            ids = [i.text for i in doc_id]
+        elif collection == 'ARCI':
+            doc_id = tree.xpath(Diacriticals.DOCID_IN_ARCI_XPATH)
+            ids = [i for i in doc_id]
+
+        return list(set(ids))[0]
+
+    @staticmethod
     def collect_diacriticals(q4jsondata):
         logger = build_child_logger(name=str(os.getpid()))
         signal.signal(signal.SIGTERM, Diacriticals.child_terminate)
@@ -295,17 +317,17 @@ class Diacriticals(object):
 
             gz_path = os.path.normpath(gz_path.strip())
 
-            # Sometimes, this program stops running on aws instance, why?
             if Diacriticals.child_ready():
                 diacritical_count = {}
                 logger.info(gz_path)
                 with gzip.open(gz_path, 'rb') as gz_file:
+                    collection = gz_path.rpartition('collection=')[2].split('/')[0]
                     for record in gz_file:
                         if len(record) < 1:
                             continue
 
-                        # TODO: extract collection and doc_id.
-                        collection = gz_path.rpartition('collection=')[2].split('/')[0]
+                        # TODO: extract doc_id.
+                        id = Diacriticals.extract_doc_id(StringIO.StringIO(record), collection)
 
                         tree = etree.parse(StringIO.StringIO(record))
 
@@ -322,6 +344,9 @@ class Diacriticals(object):
 
                                         diacritical_count[k].setdefault('collection', [])
                                         collection in diacritical_count[k]['collection'] or diacritical_count[k]['collection'].append(collection)
+
+                                        diacritical_count[k].setdefault('doc_id', [])
+                                        id in diacritical_count[k]['doc_id'] or diacritical_count[k]['doc_id'].append(id)
 
                                         diacritical_count[k].setdefault('Field', set())
                                         diacritical_count[k]['Field'].add(t.tag)
@@ -346,6 +371,9 @@ class Diacriticals(object):
 
                                             diacritical_count[k].setdefault('collection', [])
                                             collection in diacritical_count[k]['collection'] or diacritical_count[k]['collection'].append(collection)
+
+                                            diacritical_count[k].setdefault('doc_id', [])
+                                            id in diacritical_count[k]['doc_id'] or diacritical_count[k]['doc_id'].append(id)
 
                                             diacritical_count[k].setdefault('Field', set())
                                             diacritical_count[k]['Field'].add(child.tag)
