@@ -151,6 +151,19 @@ class Diacriticals(object):
         kill_status = [i for i in files if i.rpartition('_killed')[1]]
         return len(kill_status) == 0
 
+    @staticmethod
+    def union_addition_info(addition_info, new):
+        tags = set(addition_info.split('|')[::2])
+        new_tags = set(new.split('|')[::2])
+        new_addition_info_l = new.split('|')
+        extra_tags = list(new_tags - tags)
+        for e in extra_tags:
+            e_index = new_addition_info_l.index(e)
+            extra_addition_info = '|'.join(new_addition_info_l[e_index:e_index + 2])
+            addition_info = addition_info + '|' + extra_addition_info
+
+        return addition_info
+
     def diacritical_report(self):
         count = {}
         addition = {}
@@ -167,8 +180,10 @@ class Diacriticals(object):
                         count.setdefault(k, 0)
                         count[k] += int(row['count'])
 
-                        if k not in addition:
-                            addition[k] = row['addition']
+                        if k in addition:
+                            addition[k] = Diacriticals.union_addition_info(addition[k], row['addition'])
+                        else:
+                              addition[k] = row['addition']
 
         self._logger.info("{0} child reports are in {1}".format(child_report_count, children_dir))
         count = OrderedDict(sorted(count.items(), key=lambda t:t[1], reverse=True))
