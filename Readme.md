@@ -18,6 +18,6 @@
 ~~3. Some characters don't appear in excel.~~
 
 ~~1. Add "collection" and "doc id" columns after each "Example" column.~~
-1. List `type` attriutes for each title field in the report.
+~~1. List `type` attriutes for each title field in the report.~~
 2. Add a "UT" column in the report. 
 3. Add more unit test cases, e.g `child process result validation`

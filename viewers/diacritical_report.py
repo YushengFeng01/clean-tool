@@ -17,6 +17,17 @@ def union(addition_info, new):
 
     return addition_info
 
+def sort_addtion_info(addition_info):
+    sorted_addition = ''
+    addition_l = addition_info.split('|')
+    tags = sorted(addition_l[::2])
+    for t in tags:
+        index = addition_l.index(t)
+        sorted_addition += '|' + '|'.join(addition_l[index:index+2])
+
+    return sorted_addition.strip('|')
+
+
 def check_addtion_info():
     addition = {}
     for root, subdir, files in os.walk('../build/output'):
@@ -70,3 +81,6 @@ if __name__ == '__main__':
     assert new, addition_info_4
 
     check_addtion_info()
+
+    sorted_addition = sort_addtion_info('wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl')
+    assert sorted_addition, 'display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl|wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
