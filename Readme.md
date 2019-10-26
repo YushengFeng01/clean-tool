@@ -19,5 +19,10 @@
 
 ~~1. Add "collection" and "doc id" columns after each "Example" column.~~
 ~~1. List `type` attriutes for each title field in the report.~~
-2. Add a "UT" column in the report. 
-3. Add more unit test cases, e.g `child process result validation`
+1. Add a "UT" column in the report. 
+2. Confirm if one record has only on **doc_id** and **uid**.
+3. Some record's type aren't `src` in superunfi. So the ut field is empty for some characters.
+4. Add more unit test cases, e.g `child process result validation`
+
+## Cluster
+cluster_1.snapshot.dev

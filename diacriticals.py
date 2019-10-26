@@ -60,6 +60,8 @@ class Diacriticals(object):
     NAME_IN_UNIF_XPATH = '/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/names/name[@transliterated=\'Y\']'
     DOCID_IN_UNIF_XPATH = '/REC/doc_id'
     DOCID_IN_ARCI_XPATH = '/REC/static_data/summary/EWUID/WUID/@doc_id'
+    UT_IN_ARCI_XPATH = '/REC/static_data/summary[@type=\'src\']/EWUID/@uid'
+    UT_IN_SUPERUNIF_XPATH = '/REC/static_data/specific_content/summary[@type=\'src\']/EWUID/@uid'
     BUILD_DIR = os.path.normpath(os.path.join(ROOTDIR, 'build'))
 
     def __init__(self):
@@ -116,7 +118,7 @@ class Diacriticals(object):
         csv_report = os.path.normpath(os.path.join(output_dir, pid))
         has_report = os.access(csv_report, os.F_OK)
         with open(csv_report, 'a') as report:
-            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'addition', 'collection', 'doc_id'])
+            csv_writer = csv.DictWriter(report, fieldnames=['diacriticals', 'count', 'addition', 'collection', 'doc_id', 'ut'])
             has_report or csv_writer.writeheader()
             for k, i in count_dict.items():
                 f = list(i['Field'])
@@ -129,7 +131,8 @@ class Diacriticals(object):
                     'count': i['count'],
                     'addition': f3,
                     'collection': '/'.join(i['collection']),
-                    'doc_id': ', '.join(i['doc_id'])
+                    'doc_id': ', '.join(i['doc_id']),
+                    'ut': ', '.join(i['ut'])
                 })
 
     @staticmethod
@@ -179,6 +182,7 @@ class Diacriticals(object):
         addition = {}
         collection = {}
         doc_id = {}
+        ut = {}
         child_report_count = 0
         children_dir = os.path.normpath(os.path.join(Diacriticals.BUILD_DIR, 'output'))
         for root, subdir, files in os.walk(children_dir):
@@ -197,6 +201,10 @@ class Diacriticals(object):
 
                         doc_id.setdefault(k, set())
                         doc_id[k].add(row['doc_id'])
+
+                        ut.setdefault(k, set())
+                        # Some record's types are not "src" in superunif. So the ut may be an empty list here.
+                        len(row['ut']) and ut[k].add(row['ut'])
 
                         if k in addition:
                             addition[k] = Diacriticals.union_addition_info(addition[k], row['addition'])
@@ -218,7 +226,9 @@ class Diacriticals(object):
                 c_ = '/'.join(list(collection[k]))
                 ids = ', '.join(list(doc_id[k]))
                 id_count = len(ids.split(', '))
-                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|'+' '*5+str(id_count)+'|'+' '*5+ids+'|'+' '*5+addition[k]+'\n')
+                uts = ', '.join(list(ut[k]))
+                ut_count = len(uts.split(', ')) if len(uts) else 0
+                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|'+' '*5+str(id_count)+'|'+' '*5+ids+'|'+' '*5+str(ut_count)+'|'+' '*5+uts+'|'+' '*5+addition[k]+'\n')
 
 
     def create_build_folder(self):
@@ -312,6 +322,17 @@ class Diacriticals(object):
         return list(set(ids))[0]
 
     @staticmethod
+    def extract_ut(xml_doc, collection):
+        uts = []
+        tree = etree.parse(xml_doc)
+        if collection.upper() == 'ARCI':
+            uts = tree.xpath(Diacriticals.UT_IN_ARCI_XPATH)
+        elif collection.upper() == 'SUPERUNIF':
+            uts = tree.xpath(Diacriticals.UT_IN_SUPERUNIF_XPATH)
+
+        return list(set(uts))[0] if len(uts) else None
+
+    @staticmethod
     def collect_diacriticals(q4jsondata):
         logger = build_child_logger(name=str(os.getpid()))
         signal.signal(signal.SIGTERM, Diacriticals.child_terminate)
@@ -335,8 +356,8 @@ class Diacriticals(object):
                         if len(record) < 1:
                             continue
 
-                        # TODO: extract doc_id.
                         id = Diacriticals.extract_doc_id(StringIO.StringIO(record), collection)
+                        ut = Diacriticals.extract_ut(StringIO.StringIO(record), collection)
 
                         tree = etree.parse(StringIO.StringIO(record))
 
@@ -356,6 +377,10 @@ class Diacriticals(object):
 
                                         diacritical_count[k].setdefault('doc_id', [])
                                         id in diacritical_count[k]['doc_id'] or diacritical_count[k]['doc_id'].append(id)
+
+                                        diacritical_count[k].setdefault('ut', [])
+                                        if ut and ut not in diacritical_count[k]['ut']:
+                                            diacritical_count[k]['ut'].append(ut)
 
                                         diacritical_count[k].setdefault('Field', set())
                                         if 'type' in t.attrib:
@@ -387,6 +412,10 @@ class Diacriticals(object):
 
                                             diacritical_count[k].setdefault('doc_id', [])
                                             id in diacritical_count[k]['doc_id'] or diacritical_count[k]['doc_id'].append(id)
+
+                                            diacritical_count[k].setdefault('ut', [])
+                                            if ut and ut not in diacritical_count[k]['ut']:
+                                                diacritical_count[k]['ut'].append(ut)
 
                                             diacritical_count[k].setdefault('Field', set())
                                             diacritical_count[k]['Field'].add(child.tag)
