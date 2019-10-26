@@ -155,14 +155,35 @@ class Diacriticals(object):
 
     @staticmethod
     def sort_addition_info(addition_info):
-        sorted_addition = ''
+        # order: title|title example|display_name|display name example|wos_standard|wos_standard example
+        # TODO: This logic is a little complicated. I need to simplify it later.
         addition_l = addition_info.split('|')
-        tags = sorted(addition_l[::2])
-        for t in tags:
-            index = addition_l.index(t)
-            sorted_addition += '|' + '|'.join(addition_l[index:index + 2])
+        titles = sorted([i for i in addition_l if i.startswith('title')])
 
-        return sorted_addition.strip('|')
+        sorted_addition = '|'
+        if len(titles):
+            for t in titles:
+                index = addition_l.index(t)
+                sorted_addition += '|'.join(addition_l[index:index + 2])
+        else:
+            sorted_addition += '|'
+
+        sorted_addition += '|'
+        if 'display_name' in addition_l:
+            index = addition_l.index('display_name')
+            sorted_addition += '|'.join(addition_l[index:index + 2])
+        else:
+            sorted_addition += '|'
+
+        sorted_addition += '|'
+        if 'wos_standard' in addition_l:
+            index = addition_l.index('wos_standard')
+            sorted_addition += '|'.join(addition_l[index:index + 2])
+        else:
+            sorted_addition += '|'
+
+        # Remove the first '|'
+        return sorted_addition.partition('|')[2]
 
     @staticmethod
     def union_addition_info(addition_info, new):

@@ -17,20 +17,40 @@ def union(addition_info, new):
 
     return addition_info
 
-def sort_addtion_info(addition_info):
-    sorted_addition = ''
+def sort_addition_info(addition_info):
+    # order: title|title example|display_name|display name example|wos_standard|wos_standard example
     addition_l = addition_info.split('|')
-    tags = sorted(addition_l[::2])
-    for t in tags:
-        index = addition_l.index(t)
-        sorted_addition += '|' + '|'.join(addition_l[index:index+2])
+    titles = sorted([i for i in addition_l if i.startswith('title')])
 
-    return sorted_addition.strip('|')
+    sorted_addition = '|'
+    if len(titles):
+        for t in titles:
+            index = addition_l.index(t)
+            sorted_addition += '|'.join(addition_l[index:index+2])
+    else:
+        sorted_addition += '|'
+
+    sorted_addition += '|'
+    if 'display_name' in addition_l:
+        index = addition_l.index('display_name')
+        sorted_addition += '|'.join(addition_l[index:index+2])
+    else:
+        sorted_addition += '|'
+
+    sorted_addition += '|'
+    if 'wos_standard' in addition_l:
+        index = addition_l.index('wos_standard')
+        sorted_addition += '|'.join(addition_l[index:index+2])
+    else:
+        sorted_addition += '|'
+
+    # Remove the first '|'
+    return sorted_addition.partition('|')[2]
 
 
 def check_addtion_info():
     addition = {}
-    for root, subdir, files in os.walk('../build/output'):
+    for root, subdir, files in os.walk('D:\\dev\\clean-tool\\build1026\\build\\output'):
         for csv_file in files:
             report = os.path.normpath(os.path.join(root, csv_file))
             with open(report, 'r') as csv_report:
@@ -62,15 +82,15 @@ def check_addtion_info():
 if __name__ == '__main__':
     addition_info_1 = 'wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī'
     new = union(addition_info_1, SAMPLE)
-    assert new, SAMPLE
+    assert new == SAMPLE
 
     addition_info_2 = 'wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī'
     new = union(addition_info_2, SAMPLE)
-    assert new, 'wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī'
+    assert new == 'wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī|title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ'
 
     addition_info_3 = 'display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī'
     new = union(addition_info_3, SAMPLE)
-    assert new, 'display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī|wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ'
+    assert new == 'display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī|wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ'
 
     addition_info_3 = 'wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ'
     new = union(addition_info_3, SAMPLE)
@@ -78,9 +98,23 @@ if __name__ == '__main__':
 
     addition_info_4 = 'title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ'
     new = union(addition_info_4, SAMPLE)
-    assert new, addition_info_4
+    assert new == 'title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ|wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī'
 
     check_addtion_info()
 
-    sorted_addition = sort_addtion_info('wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl')
-    assert sorted_addition, 'display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl|wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
+    sorted_addition = sort_addition_info('wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl')
+    # assert sorted_addition, 'display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl|wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
+    print(sorted_addition)
+    assert sorted_addition == 'title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl|display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
+
+    sorted_addition = sort_addition_info('wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman')
+    print(sorted_addition)
+    assert sorted_addition == '||||wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
+
+    sorted_addition = sort_addition_info('display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī')
+    print(sorted_addition)
+    assert sorted_addition == '||display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī||'
+
+    sorted_addition = sort_addition_info('title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl')
+    print(sorted_addition)
+    assert sorted_addition == 'title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl||||'
