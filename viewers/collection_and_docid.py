@@ -42,6 +42,10 @@ def extract_title_type(xml, collection):
     print(titles[0].attrib)
 
 def check_extract_title_type():
+    '''
+    Check if title transliterated='Y' elements are source type.
+    :return:
+    '''
     step = 0
     with open('../build/XML.txt', 'r') as gz_paths:
         for gz_path in gz_paths:
@@ -53,15 +57,15 @@ def check_extract_title_type():
 
                     tree = etree.parse(StringIO.StringIO(r))
                     titles = tree.xpath(TITLE_IN_UNIF_XPATH)
-                    if len(titles):
-                        print('superunif: {0}'.format([i.attrib for i in titles]))
+                    for t in titles:
+                        if 'type' in t.attrib and t.attrib['type'] != 'source':
+                            print(t.attrib)
+
 
                     titles = tree.xpath(TITLE_IN_ARCI_XPATH)
-                    if len(titles):
-                        print('arci: {0}'.format([i.attrib for i in titles]))
-
-            if step > 10:
-                break
+                    for t in titles:
+                        if 'type' in t.attrib and t.attrib['type'] != 'source':
+                            print(t.attrib)
 
 
 

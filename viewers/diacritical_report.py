@@ -50,7 +50,7 @@ def sort_addition_info(addition_info):
 
 def check_addtion_info():
     addition = {}
-    for root, subdir, files in os.walk('D:\\dev\\clean-tool\\build1026\\build\\output'):
+    for root, subdir, files in os.walk('../build/output'):
         for csv_file in files:
             report = os.path.normpath(os.path.join(root, csv_file))
             with open(report, 'r') as csv_report:

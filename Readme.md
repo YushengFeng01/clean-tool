@@ -9,6 +9,11 @@
 #### 2019-10-25
 * Add "Collection" and "Doc_id" columns in the report
 
+#### 2019-10-26
+* sort the field and example columns
+* add "ut" and "ut_count" columns
+* check title type: the title containing `trasnliterated='Y'` are all source type so far.
+
 ## TODO:
 ~~1. Add columns **unicode, field and example**~~
 
@@ -19,7 +24,7 @@
 
 ~~1. Add "collection" and "doc id" columns after each "Example" column.~~
 ~~1. List `type` attriutes for each title field in the report.~~
-1. Add a "UT" column in the report. 
+~~1. Add a "UT" column in the report.~~ 
 2. Confirm if one record has only on **doc_id** and **uid**.
 3. Some record's type aren't `src` in superunfi. So the ut field is empty for some characters.
 4. `sort_addition_info`, its logic is a little complicated. I need to simplify it later.
