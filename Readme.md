@@ -15,7 +15,8 @@
 * check title type: the title containing `trasnliterated='Y'` are all source type so far.
 
 ## Draft
-find this doc_id : 588348300 in xml gz file
+find this doc_id : 587032724 in xml gz file 
+`batch12/collection=SUPERUNIF/part-00004-cb31f713-b179-4c7e-94c4-914b733b4410-c000.txt.gz`
 
 ## TODO:
 ~~1. Add columns **unicode, field and example**~~

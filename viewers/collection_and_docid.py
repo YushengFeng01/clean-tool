@@ -69,9 +69,11 @@ def check_extract_title_type():
 
 
 def find_doc_id_in_xml(target):
-    with open('../build/XML.txt', 'r') as gz_paths:
+    get_it = False
+    with open('D:/dev/clean-tool/build1026/build/XML.txt', 'r') as gz_paths:
         for gz_path in gz_paths:
-            step += 1
+            if get_it:
+                break
             with gzip.open(gz_path.strip(), 'rb') as records:
                 for r in records:
                     if not len(r):
@@ -80,15 +82,19 @@ def find_doc_id_in_xml(target):
                     tree = etree.parse(StringIO.StringIO(r))
                     ids = tree.xpath(DOCID_IN_UNIF_XPATH)
                     for i in ids:
-                        if i == target:
+                        # print(i.text)
+                        if i.text == target:
                             print(gz_path)
+                            get_it = True
                             break
 
 
                     ids = tree.xpath(DOCID_IN_ARCI_XPATH)
                     for i in ids:
+                        # print(i)
                         if i == target:
                             print(gz_path)
+                            get_it = True
                             break
 
 
@@ -106,4 +112,4 @@ if __name__ == '__main__':
 
     # check_extract_title_type()
 
-    find_doc_id_in_xml(588348300)
+    find_doc_id_in_xml('587032724')
