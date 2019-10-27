@@ -36,3 +36,14 @@ find this doc_id : 587032724 in xml gz file
 
 ## Cluster
 cluster_1.snapshot.dev
+curl -s -H 'Content-Type: application/json' -XGET 'elasticsearch.cluster_1.wos.us-west-2.snapshot.dev.oneplatform.build:9200/_cat/indices?v'
+curl -s -H 'Content-Type: application/json' -XPOST 'elasticsearch.cluster_1.wos.us-west-2.snapshot.dev.oneplatform.build:9200/superunif-201910160/_search?pretty' -d '
+{
+  "query" : {
+     "bool": {
+        "must": [
+           { "match" : {"colluid" : "ARCI:670632"} }
+        ]
+     }
+  }
+}'
