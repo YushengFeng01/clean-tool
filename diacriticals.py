@@ -124,7 +124,8 @@ class Diacriticals(object):
             for k, i in count_dict.items():
                 f = list(i['Field'])
                 e = i['Examples'].values()
-                field_example = zip(f, e)
+                # field_example = zip(f, e)
+                field_example = i['Examples'].items()
                 f2 = ['|'.join([p[0], p[1]]) for p in field_example]
                 f3 = '|'.join(f2)
                 csv_writer.writerow({
@@ -413,9 +414,9 @@ class Diacriticals(object):
 
                                         diacritical_count[k].setdefault('Examples', {})
                                         examples = diacritical_count[k]['Examples']
-                                        if t.tag not in examples:
+                                        if tag not in examples:
                                             t_ = t.text.encode('utf-8') if isinstance(t.text, unicode) else t.text
-                                            examples[t.tag] = t_
+                                            examples[tag] = t_
 
                         # Collect diacriticals from the children of "name" elements in arci and superunif xml data.
                         for xp in (Diacriticals.NAME_IN_ARCI_XPATH, Diacriticals.NAME_IN_UNIF_XPATH):
