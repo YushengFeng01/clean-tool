@@ -26,7 +26,7 @@
 ~~1. List `type` attriutes for each title field in the report.~~
 ~~1. Add a "UT" column in the report.~~ 
 2. Confirm if one record has only on **doc_id** and **uid**.
-3. Some record's type aren't `src` in superunfi. So the ut field is empty for some characters.
+3. Some record's type aren't `src` in superunfi. So the ut field is empty for some characters. Add type='src' into UNIF XPATH?
 4. `sort_addition_info`, its logic is a little complicated. I need to simplify it later.
 4. Add more unit test cases, e.g `child process result validation`
 
