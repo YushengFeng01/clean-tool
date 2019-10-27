@@ -14,6 +14,9 @@
 * add "ut" and "ut_count" columns
 * check title type: the title containing `trasnliterated='Y'` are all source type so far.
 
+## Draft
+find this doc_id : 588348300 in xml gz file
+
 ## TODO:
 ~~1. Add columns **unicode, field and example**~~
 
@@ -26,7 +29,7 @@
 ~~1. List `type` attriutes for each title field in the report.~~
 ~~1. Add a "UT" column in the report.~~ 
 2. Confirm if one record has only on **doc_id** and **uid**.
-3. Some record's type aren't `src` in superunfi. So the ut field is empty for some characters. Add type='src' into UNIF XPATH?
+3. **Some record's type aren't `src` in superunfi. So the ut field is empty for some characters, especially the name element in superunif. Add type='src' into UNIF XPATH?**
 4. `sort_addition_info`, its logic is a little complicated. I need to simplify it later.
 4. Add more unit test cases, e.g `child process result validation`
 

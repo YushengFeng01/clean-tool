@@ -68,6 +68,29 @@ def check_extract_title_type():
                             print(t.attrib)
 
 
+def find_doc_id_in_xml(target):
+    with open('../build/XML.txt', 'r') as gz_paths:
+        for gz_path in gz_paths:
+            step += 1
+            with gzip.open(gz_path.strip(), 'rb') as records:
+                for r in records:
+                    if not len(r):
+                        continue
+
+                    tree = etree.parse(StringIO.StringIO(r))
+                    ids = tree.xpath(DOCID_IN_UNIF_XPATH)
+                    for i in ids:
+                        if i == target:
+                            print(gz_path)
+                            break
+
+
+                    ids = tree.xpath(DOCID_IN_ARCI_XPATH)
+                    for i in ids:
+                        if i == target:
+                            print(gz_path)
+                            break
+
 
 
 
@@ -81,4 +104,6 @@ if __name__ == '__main__':
     # extract_title_type('../arci_sample.xml', 'ARCI')
     # extract_title_type('../superunif_sample.xml', 'SUPERUNIF')
 
-    check_extract_title_type()
+    # check_extract_title_type()
+
+    find_doc_id_in_xml(588348300)
