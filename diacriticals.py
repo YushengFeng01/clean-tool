@@ -56,7 +56,6 @@ class Diacriticals(object):
     NON_ASCII_PATTERN = re.compile(ur'[^\u0000-\u007f]{1}', re.MULTILINE|re.UNICODE)
     TITLE_IN_ARCI_XPATH = '/REC/static_data/summary/titles/title[@transliterated=\'Y\']'
     NAME_IN_ARCI_XPATH = '/REC/static_data/summary/names/name[@transliterated=\'Y\']'
-    # TODO: Add type='src' into UNIF XPATH
     TITLE_IN_UNIF_XPATH = '/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/titles/title[@transliterated=\'Y\']'
     NAME_IN_UNIF_XPATH = '/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/names/name[@transliterated=\'Y\']'
     DOCID_IN_UNIF_XPATH = '/REC/doc_id'
@@ -247,10 +246,17 @@ class Diacriticals(object):
                 # https://stackoverflow.com/questions/7291120/get-unicode-code-point-of-a-character-using-python
                 code_point = unicode_char.encode('unicode_escape')
                 c_ = '/'.join(list(collection[k]))
+
                 ids = ', '.join(list(doc_id[k]))
-                id_count = len(ids.split(', '))
+                ids = list(set(ids.split(', ')))
+                id_count = len(ids)
+                ids = ', '.join(ids)
+
                 uts = ', '.join(list(ut[k]))
-                ut_count = len(uts.split(', ')) if len(uts) else 0
+                uts = list(set(uts.split(', '))) if uts != '' else []
+                ut_count = len(uts)
+                uts = ', '.join(uts)
+
                 file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|'+' '*5+str(id_count)+'|'+' '*5+ids+'|'+' '*5+str(ut_count)+'|'+' '*5+uts+'|'+' '*5+addition[k]+'\n')
 
 
