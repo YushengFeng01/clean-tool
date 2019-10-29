@@ -14,10 +14,6 @@
 * add "ut" and "ut_count" columns
 * check title type: the title containing `trasnliterated='Y'` are all source type so far.
 
-## Draft
-find this doc_id : 587032724 in xml gz file 
-`batch12/collection=SUPERUNIF/part-00004-cb31f713-b179-4c7e-94c4-914b733b4410-c000.txt.gz`
-
 ## TODO:
 ~~1. Add columns **unicode, field and example**~~
 
@@ -29,11 +25,10 @@ find this doc_id : 587032724 in xml gz file
 ~~1. Add "collection" and "doc id" columns after each "Example" column.~~
 ~~1. List `type` attriutes for each title field in the report.~~
 ~~1. Add a "UT" column in the report.~~ 
-2. Explain why line 152 in report_v1.3.2 has  no ut.
-3. Confirm if we colllect `<title type='item', translated='Y'>`.
-4. Dedup doc_id list and ut_list columns.
-5. **Some record's type aren't `src` in superunfi. So the ut field is empty for some characters, especially the name element in superunif. Add type='src' into UNIF XPATH?**
-6. `sort_addition_info`, its logic is a little complicated. I need to simplify it later.
+~~2. Explain why line 152 in report_v1.3.2 has  no ut.~~
+~~4. Dedup doc_id list and ut_list columns.~~
+~~5. **Some record's type aren't `src` in superunfi. So the ut field is empty for some characters, especially the name element in superunif. Add type='src' into UNIF XPATH?**~~
+6. `sort_addition_info`, its logic is a little complicated. I need to simplify it later. The name elements may contain more children.
 7. Add more unit test cases, e.g `child process result validation`
 
 ## Cluster

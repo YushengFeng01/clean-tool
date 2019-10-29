@@ -15,21 +15,7 @@ Maǧalaẗ ṟisalaẗ al-ẖaliǧ al-arạbi
 Magallaẗ ʿulum al-tarbiyyaẗ al-riyaḍiyyaẗ
 """
 test_data2 = """Nicholson, R"""
-# https://unicode-table.com/en/blocks/latin-1-supplement/
-latin_supplment_data = """
-¢ ¢ ö ö Õ Õ ã ã
-"""
-# https://unicode-table.com/en/blocks/latin-extended-a/
-latin_extend_a_data = """
-Ħ Ħ š š Ę Ę
-"""
-# https://unicode-table.com/en/blocks/latin-extended-b/
-latin_extend_b_data = """
-ƀ ƀ Ǎ Ǎ ǻ a ǻ
-"""
-# https://unicode-table.com/en/blocks/latin-extended-c/
-# https://unicode-table.com/en/blocks/latin-extended-d/
-# These two tables don't contain English letters associated with diacriticals.
+
 test_build_dir = os.path.normpath(os.path.join(ROOTDIR, 'build'))
 
 class DiacriticalsUnitTest(unittest.TestCase):
@@ -40,27 +26,6 @@ class DiacriticalsUnitTest(unittest.TestCase):
     def test_collect_diacriticals_from_a_text(self):
         diac = Diacriticals()
         diacriticals, _ = diac.diacritical_count(test_data)
-        for k, v in diacriticals.items():
-            print("{0}: {1}".format(k, v))
-
-    def test_collect_latin_supplement_from_a_text(self):
-        diac = Diacriticals()
-        print('LATIN SUPPLEMENT')
-        diacriticals, _ = diac.diacritical_count(latin_supplment_data)
-        for k, v in diacriticals.items():
-            print("{0}: {1}".format(k, v))
-
-    def test_collect_latin_extended_a_from_a_text(self):
-        diac = Diacriticals()
-        print('LATIN EXTENDED a')
-        diacriticals, _ = diac.diacritical_count(latin_extend_a_data)
-        for k, v in diacriticals.items():
-            print("{0}: {1}".format(k, v))
-
-    def test_collect_latin_extended_b_from_a_text(self):
-        diac = Diacriticals()
-        print('LATIN EXTENDED b')
-        diacriticals, _ = diac.diacritical_count(latin_extend_b_data)
         for k, v in diacriticals.items():
             print("{0}: {1}".format(k, v))
 

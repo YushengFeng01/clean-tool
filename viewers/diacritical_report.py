@@ -21,9 +21,11 @@ def union(addition_info, new):
 
 def sort_addition_info(addition_info):
     # order: title|title example|display_name|display name example|wos_standard|wos_standard example|other|other example
-    addition_l = addition_info.split('|')
+    addition_l_ = addition_info.split('|')
+    addition_l = [i for i in addition_l_ if len(i)]
     titles = sorted([i for i in addition_l if i.startswith('title')])
-    tags = addition_info.split('|')[::2]
+    tags_ = addition_info.split('|')[::2]
+    tags = [i for i in tags_ if len(i)]
 
     sorted_addition = ''
     if len(titles):
@@ -120,7 +122,7 @@ if __name__ == '__main__':
     assert sorted_addition == 'title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl|display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
 
     sorted_addition = sort_addition_info('wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman')
-    print(sorted_addition)
+    # print(sorted_addition)
     assert sorted_addition == '||||wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
 
     sorted_addition = sort_addition_info('display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī')
