@@ -156,21 +156,24 @@ class Diacriticals(object):
 
     @staticmethod
     def sort_addition_info(addition_info):
-        # order: title|title example|display_name|display name example|wos_standard|wos_standard example
-        # TODO: This logic is a little complicated. I need to simplify it later.
+        # order: title|title example|display_name|display name example|wos_standard|wos_standard example|other|other example
         addition_l = addition_info.split('|')
         titles = sorted([i for i in addition_l if i.startswith('title')])
+        tags = addition_info.split('|')[::2]
 
-        sorted_addition = '|'
+        sorted_addition = ''
         if len(titles):
             for t in titles:
+                tags.remove(t)
                 index = addition_l.index(t)
-                sorted_addition += '|'.join(addition_l[index:index + 2])
+                title_ = '|' + '|'.join(addition_l[index:index + 2])
+                sorted_addition += title_
         else:
-            sorted_addition += '|'
+            sorted_addition += '||'
 
         sorted_addition += '|'
         if 'display_name' in addition_l:
+            tags.remove('display_name')
             index = addition_l.index('display_name')
             sorted_addition += '|'.join(addition_l[index:index + 2])
         else:
@@ -178,10 +181,17 @@ class Diacriticals(object):
 
         sorted_addition += '|'
         if 'wos_standard' in addition_l:
+            tags.remove('wos_standard')
             index = addition_l.index('wos_standard')
             sorted_addition += '|'.join(addition_l[index:index + 2])
         else:
             sorted_addition += '|'
+
+        if len(tags):
+            sorted_addition += '|'
+            for t in tags:
+                index = addition_l.index(t)
+                sorted_addition += '|'.join(addition_l[index:index + 2])
 
         # Remove the first '|'
         return sorted_addition.partition('|')[2]

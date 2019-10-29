@@ -3,6 +3,8 @@ import csv
 import os
 
 SAMPLE = "wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī|title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ"
+EXTRA_SAMPLE = "DOOM|Id Software|wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī|title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ"
+MORE_TITLE = "DOOM|Id Software|wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī|title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ|title_item|Mindwalk Stuido|title_hr|Rebacca"
 
 
 def union(addition_info, new):
@@ -18,20 +20,24 @@ def union(addition_info, new):
     return addition_info
 
 def sort_addition_info(addition_info):
-    # order: title|title example|display_name|display name example|wos_standard|wos_standard example
+    # order: title|title example|display_name|display name example|wos_standard|wos_standard example|other|other example
     addition_l = addition_info.split('|')
     titles = sorted([i for i in addition_l if i.startswith('title')])
+    tags = addition_info.split('|')[::2]
 
-    sorted_addition = '|'
+    sorted_addition = ''
     if len(titles):
         for t in titles:
+            tags.remove(t)
             index = addition_l.index(t)
-            sorted_addition += '|'.join(addition_l[index:index+2])
+            title_ ='|' + '|'.join(addition_l[index:index+2])
+            sorted_addition += title_
     else:
-        sorted_addition += '|'
+        sorted_addition += '||'
 
     sorted_addition += '|'
     if 'display_name' in addition_l:
+        tags.remove('display_name')
         index = addition_l.index('display_name')
         sorted_addition += '|'.join(addition_l[index:index+2])
     else:
@@ -39,10 +45,17 @@ def sort_addition_info(addition_info):
 
     sorted_addition += '|'
     if 'wos_standard' in addition_l:
+        tags.remove('wos_standard')
         index = addition_l.index('wos_standard')
         sorted_addition += '|'.join(addition_l[index:index+2])
     else:
         sorted_addition += '|'
+
+    if len(tags):
+        sorted_addition += '|'
+        for t in tags:
+            index = addition_l.index(t)
+            sorted_addition += '|'.join(addition_l[index:index+2])
 
     # Remove the first '|'
     return sorted_addition.partition('|')[2]
@@ -50,7 +63,7 @@ def sort_addition_info(addition_info):
 
 def check_addtion_info():
     addition = {}
-    for root, subdir, files in os.walk('../build/output'):
+    for root, subdir, files in os.walk('D:\\dev\\clean-tool\\build1028\\build\\output'):
         for csv_file in files:
             report = os.path.normpath(os.path.join(root, csv_file))
             with open(report, 'r') as csv_report:
@@ -103,8 +116,7 @@ if __name__ == '__main__':
     check_addtion_info()
 
     sorted_addition = sort_addition_info('wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl')
-    # assert sorted_addition, 'display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl|wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
-    print(sorted_addition)
+    # print(sorted_addition)
     assert sorted_addition == 'title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl|display_name|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman|wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
 
     sorted_addition = sort_addition_info('wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman')
@@ -112,9 +124,21 @@ if __name__ == '__main__':
     assert sorted_addition == '||||wos_standard|Al-ʿAẓamī, Muḥammad Ḍiyā’ al-Raḥman'
 
     sorted_addition = sort_addition_info('display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī')
-    print(sorted_addition)
+    # print(sorted_addition)
     assert sorted_addition == '||display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī||'
 
     sorted_addition = sort_addition_info('title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl')
-    print(sorted_addition)
+    # print(sorted_addition)
     assert sorted_addition == 'title_source|Al-mağallaẗ al-urdunniyyaẗ fī idāraẗ al-aʻmāl||||'
+
+    addition_info_5 = 'title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ|wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī'
+    new = union(addition_info_5, EXTRA_SAMPLE)
+    assert new == 'title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ|wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī|DOOM|Id Software'
+
+    sorted_addition = sort_addition_info(EXTRA_SAMPLE)
+    # print(sorted_addition)
+    assert sorted_addition == 'title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī|wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|DOOM|Id Software'
+
+    sorted_addition = sort_addition_info(MORE_TITLE)
+    # print(sorted_addition)
+    assert sorted_addition == 'title|Magallaẗ al-ḥikmaẗ li-l-dirasat al-tariẖiyyẗ|title_hr|Rebacca|title_item|Mindwalk Stuido|display_name|Al-Raḥībanī, Muṣṭafā al-Suyūtī|wos_standard|Al-Raḥībanī, Muṣṭafā al-Suyūtī|DOOM|Id Software'

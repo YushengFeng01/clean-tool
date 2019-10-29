@@ -112,4 +112,4 @@ if __name__ == '__main__':
 
     # check_extract_title_type()
 
-    find_doc_id_in_xml('587032724')
+    find_doc_id_in_xml('587430355')
