@@ -33,6 +33,7 @@
 
 ## Cluster
 cluster_1.snapshot.dev
+```
 curl -s -H 'Content-Type: application/json' -XGET 'elasticsearch.cluster_1.wos.us-west-2.snapshot.dev.oneplatform.build:9200/_cat/indices?v'
 curl -s -H 'Content-Type: application/json' -XPOST 'elasticsearch.cluster_1.wos.us-west-2.snapshot.dev.oneplatform.build:9200/arci-201910160/_search?pretty' -d '
 {
@@ -44,3 +45,4 @@ curl -s -H 'Content-Type: application/json' -XPOST 'elasticsearch.cluster_1.wos.
      }
   }
 }'
+```

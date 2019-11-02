@@ -103,12 +103,15 @@ class Diacriticals(object):
         count = {}
         text_in_unicode = text.decode('utf-8') if not isinstance(text, unicode) else text
         text_in_unicode = unicodedata.normalize('NFKC', text_in_unicode)
-        # latins = re.findall(Diacriticals.LATIN_EXTERNAL_PATTERN, text_in_unicode)
-        latins = re.findall(Diacriticals.NON_ASCII_PATTERN, text_in_unicode)
-        for d in latins:
-            d = d.encode('utf-8')
-            count.setdefault(d, 0)
-            count[d] += 1
+        if text_in_unicode != u'EMPTY':
+            latins = re.findall(Diacriticals.NON_ASCII_PATTERN, text_in_unicode)
+            for d in latins:
+                d = d.encode('utf-8')
+                count.setdefault(d, 0)
+                count[d] += 1
+        else:
+            count.setdefault('EMPTY', 0)
+            count['EMPTY'] += 1
         return count, text_in_unicode
 
     @staticmethod
@@ -161,11 +164,16 @@ class Diacriticals(object):
         addition_l = [i for i in addition_l_ if len(i)]
         titles = sorted([i for i in addition_l if i.startswith('title')])
         tags_ = addition_info.split('|')[::2]
-        tags = [i for i in tags_ if len(i)]
+        tags = sorted([i for i in tags_ if len(i)])
+        #print("title: {0}".format(titles))
+        #print("tags: {0}".format(tags))
+        #print("additional: {0}".format(addition_l))
+        #print("="*40)
 
         sorted_addition = ''
         if len(titles):
             for t in titles:
+               # print("remove: {0}".format(t))
                 tags.remove(t)
                 index = addition_l.index(t)
                 title_ = '|' + '|'.join(addition_l[index:index + 2])
@@ -190,8 +198,10 @@ class Diacriticals(object):
             sorted_addition += '|'
 
         if len(tags):
-            sorted_addition += '|'
+        #    print(tags)
+        #     sorted_addition += '|'
             for t in tags:
+                sorted_addition += '|'
                 index = addition_l.index(t)
                 sorted_addition += '|'.join(addition_l[index:index + 2])
 
@@ -204,11 +214,15 @@ class Diacriticals(object):
         new_tags = set(new.split('|')[::2])
         new_addition_info_l = new.split('|')
         extra_tags = list(new_tags - tags)
+        # print("addition_info: {0}".format(addition_info))
+        # print("new: {0}".format(new))
+        # print("extra: {0}".format(extra_tags))
         for e in extra_tags:
             e_index = new_addition_info_l.index(e)
             extra_addition_info = '|'.join(new_addition_info_l[e_index:e_index + 2])
             addition_info = addition_info + '|' + extra_addition_info
-
+        # print("new addition: {0}".format(addition_info))
+        # print("-"*40)
         return addition_info
 
     def diacritical_report(self):
@@ -245,7 +259,10 @@ class Diacriticals(object):
                         else:
                               addition[k] = row['addition']
 
+                        print("before sort {0}: {1}".format(k, row['addition']))
+
                         addition[k] = Diacriticals.sort_addition_info(addition[k])
+                        print("after sort: {0}".format(addition[k]))
 
         self._logger.info("{0} child reports are in {1}".format(child_report_count, children_dir))
         count = OrderedDict(sorted(count.items(), key=lambda t:t[1], reverse=True))
@@ -254,9 +271,9 @@ class Diacriticals(object):
         with open(report, 'w') as file:
             for k, v in count.items():
                 unicode_char = k if isinstance(k, unicode) else k.decode('utf-8')
-                unicode_name = unicodedata.name(unicode_char)
+                unicode_name = unicodedata.name(unicode_char) if unicode_char != u'EMPTY' else 'EMPTY'
                 # https://stackoverflow.com/questions/7291120/get-unicode-code-point-of-a-character-using-python
-                code_point = unicode_char.encode('unicode_escape')
+                code_point = unicode_char.encode('unicode_escape') if unicode_char != u'EMPTY' else str(-1)
                 c_ = '/'.join(list(collection[k]))
 
                 ids = ', '.join(list(doc_id[k]))
@@ -269,7 +286,10 @@ class Diacriticals(object):
                 ut_count = len(uts)
                 uts = ', '.join(uts)
 
-                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|'+' '*5+str(id_count)+'|'+' '*5+ids+'|'+' '*5+str(ut_count)+'|'+' '*5+uts+'|'+' '*5+addition[k]+'\n')
+                nfkd_form = unicodedata.normalize('NFKD', k.decode('utf-8')).encode('ascii', 'ignore')
+                nfkd_ascii_code = ord(nfkd_form) if len(nfkd_form) and nfkd_form != u'EMPTY' else str(-1)
+
+                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+ '|'+' '*5+nfkd_form+'|'+' '*5+str(nfkd_ascii_code)+'|'+' '*5+c_+'|'+' '*5+str(id_count)+'|'+' '*5+ids+'|'+' '*5+str(ut_count)+'|'+' '*5+uts+'|'+' '*5+addition[k]+'\n')
 
 
     def create_build_folder(self):
@@ -407,6 +427,12 @@ class Diacriticals(object):
                             titles = tree.xpath(xp)
                             if len(titles):
                                 for t in titles:
+                                    if not t.text:
+                                        logger.warn("gz_path: {0}".format(gz_path))
+                                        logger.warn("{0}, {1}".format(collection, id))
+                                        logger.warn("{0}: {1}".format(t.tag, t.text))
+                                        logger.warn("="*40)
+                                        t.text = "EMPTY"
                                     count_, text_in_unicode = Diacriticals.diacritical_count(t.text)
                                     for k, v in count_.items():
                                         diacritical_count.setdefault(k, {})
@@ -442,6 +468,12 @@ class Diacriticals(object):
                             if len(names):
                                 for name in names:
                                     for child in name:
+                                        if not child.text:
+                                            logger.warn("gz_path: {0}".format(gz_path))
+                                            logger.warn("{0}, {1}".format(collection, id))
+                                            logger.warn("{0}: {1}".format(child.tag, child.text))
+                                            logger.warn("="*40)
+                                            child.text="EMPTY"
                                         count_, text_in_unicode = Diacriticals.diacritical_count(child.text)
                                         for k, v in count_.items():
                                             diacritical_count.setdefault(k, {})
