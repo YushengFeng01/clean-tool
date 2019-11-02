@@ -269,7 +269,10 @@ class Diacriticals(object):
                 ut_count = len(uts)
                 uts = ', '.join(uts)
 
-                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+'|'+' '*5+c_+'|'+' '*5+str(id_count)+'|'+' '*5+ids+'|'+' '*5+str(ut_count)+'|'+' '*5+uts+'|'+' '*5+addition[k]+'\n')
+                nfkd_form = unicodedata.normalize('NFKD', k.decode('utf-8')).encode('ascii', 'ignore')
+                nfkd_ascii_code = ord(nfkd_form) if len(nfkd_form) else ''
+
+                file.write(k+'|'+' '*5+str(v)+'|'+' '*5+code_point+'|'+ ' '*5+unicode_name.lower()+ '|'+' '*5+nfkd_form+'|'+' '*5+str(nfkd_ascii_code)+'|'+' '*5+c_+'|'+' '*5+str(id_count)+'|'+' '*5+ids+'|'+' '*5+str(ut_count)+'|'+' '*5+uts+'|'+' '*5+addition[k]+'\n')
 
 
     def create_build_folder(self):
