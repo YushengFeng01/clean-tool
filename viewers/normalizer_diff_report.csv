@@ -1,0 +1,3 @@
+character,code_point,name,nfkd,nfkd_ascii_code,nfd,nfd_ascii_code,nfkc,nfkc_ascii_code,nfc,nfc_ascii_code
+5,5,digit five,5,53,5,53,5,53,5,53
+⁵,\u2075,superscript five,5,53,,,5,53,,
