@@ -1,48 +1,73 @@
-## ChangedLog
-#### 2019-10-22
-* Add unicode name in the final report.
-* Add "Field", "Example" in the  child process csv report.
+## Quick Start
+* Copy the file "diacrictials.py", a Python2 script into a directory, e.g `~/temp_work/`
+* Copy data files into a directory, e.g `~/temp_work/batch14`. **The data files are all gz files.**
+* Run the python script: `nohup python diacriticals.py -d ./batch14 &`
 
-#### 2019-10-23
-* Add "Field" and "Example" columns in the report.
+You can find a folder `~/temp_work/build` when the program complete.
+The file `~/temp_work/build/diacritical_count.txt` is the result report. You can use it as a csv file whose delimiter is `|`
 
-#### 2019-10-25
-* Add "Collection" and "Doc_id" columns in the report
+## Specify the count of child process
+Assume you machine has 12 cpu cores, this script would generate 10 (cpu_count-2) to collect diacriticals from xml data files by default.
 
-#### 2019-10-26
-* sort the field and example columns
-* add "ut" and "ut_count" columns
-* check title type: the title containing `trasnliterated='Y'` are all source type so far.
+Speicify 5 child processes:
 
-## TODO:
-~~1. Add columns **unicode, field and example**~~
+`nohup python diacriticals.py -d ./batch14 -n 5`
 
-~~1. The "Field" and "Example" should be like this: `{"title":"...", "wos_standard":"", "display_name":""}`~~
+Only generate 10 (cpu_count-2) child processes if the machine only has 12 cpu cores:
 
-~~2. Modify the process of gerneating final report.~~
-~~3. Some characters don't appear in excel.~~
+`nohup python diacriticals.py -d ./batch14 -n 32`
 
-~~1. Add "collection" and "doc id" columns after each "Example" column.~~
-~~1. List `type` attriutes for each title field in the report.~~
-~~1. Add a "UT" column in the report.~~ 
-~~2. Explain why line 152 in report_v1.3.2 has  no ut.~~
-~~4. Dedup doc_id list and ut_list columns.~~
-~~5. **Some record's type aren't `src` in superunfi. So the ut field is empty for some characters, especially the name element in superunif. Add type='src' into UNIF XPATH?**~~
-6. `sort_addition_info`, its logic is a little complicated. I need to simplify it later. The name elements may contain more children.
-7. Add more unit test cases, e.g `child process result validation`
+## Cancel the program immediately
+1. Find the main pid of the program. You can find the main pid in the `~/temp_work/diacriticals.log` file
 
-## Cluster
-cluster_1.snapshot.dev
 ```
-curl -s -H 'Content-Type: application/json' -XGET 'elasticsearch.cluster_1.wos.us-west-2.snapshot.dev.oneplatform.build:9200/_cat/indices?v'
-curl -s -H 'Content-Type: application/json' -XPOST 'elasticsearch.cluster_1.wos.us-west-2.snapshot.dev.oneplatform.build:9200/arci-201910160/_search?pretty' -d '
-{
-  "query" : {
-     "bool": {
-        "must": [
-           { "match" : {"source" : "Dirasat wa abḥaṯ (Al-galfaẗ )"} }
-        ]
-     }
-  }
-}'
+cat diacriticals.log
+[ec2-user@ip-10-152-12-68 temp]$ cat diacriticals.log
+2019-10-31 01:59:57,476 - diacriticals - INFO - xml data location: /opt/reuters/data/elasticsearch/arci_rosette/diacriticals/data
+2019-10-31 01:59:57,519 - diacriticals - INFO - The main pid is 44279
+2019-10-31 01:59:57,524 - diacriticals - INFO - child 44280 starts running
+2019-10-31 01:59:57,525 - diacriticals - INFO - child 44281 starts running
+2019-10-31 01:59:57,526 - diacriticals - INFO - child 44282 starts running
+2019-10-31 01:59:57,527 - diacriticals - INFO - child 44283 starts running
+2019-10-31 01:59:57,528 - diacriticals - INFO - child 44284 starts running
+2019-10-31 01:59:57,528 - diacriticals - INFO - child 44285 starts running
+2019-10-31 01:59:57,529 - diacriticals - INFO - child 44286 starts running
+2019-10-31 01:59:57,530 - diacriticals - INFO - child 44287 starts running
+2019-10-31 01:59:57,531 - diacriticals - INFO - child 44288 starts running
+2019-10-31 01:59:57,532 - diacriticals - INFO - child 44289 starts running
+2019-10-31 01:59:57,532 - diacriticals - INFO - child 44290 starts running
+2019-10-31 01:59:57,533 - diacriticals - INFO - child 44291 starts running
+2019-10-31 01:59:57,534 - diacriticals - INFO - child 44292 starts running
+2019-10-31 01:59:57,535 - diacriticals - INFO - child 44293 starts running
+2019-10-31 02:00:42,078 - diacriticals - INFO - 14 child reports are in build/output
+2019-10-31 02:00:42,079 - diacriticals - INFO - There are 230 diacriticals in arci and superunif data.
+
 ```
+
+2. Kill the main process `kill 44279`
+
+## Note
+The program depends on the hierarchical structure of the xml files completely. So you can't use this program directly if your xml structure is different from mine.
+
+## Capture non-ascii characters
+I use regular expression to capture non-ascii characters. I attach the code here for convenient.
+```
+NON_ASCII_PATTERN = re.compile(ur'[^\u0000-\u007f]{1}', re.MULTILINE|re.UNICODE)
+
+def diacritical_count(text):
+    count = {}
+    text_in_unicode = text.decode('utf-8') if not isinstance(text, unicode) else text
+    text_in_unicode = unicodedata.normalize('NFKC', text_in_unicode)
+    latins = re.findall(Diacriticals.NON_ASCII_PATTERN, text_in_unicode)
+    for d in latins:
+        d = d.encode('utf-8')
+        count.setdefault(d, 0)
+        count[d] += 1
+    return count, text_in_unicode
+```
+## Futional Test
+I attach my own funtional test `functional_test.py` here as well. I hope it's helpful for you to run or refer this script.
+
+Email me if you have any question about this script.
+
+Yusheng.Feng@clarivate.com
