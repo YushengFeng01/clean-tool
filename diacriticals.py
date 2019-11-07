@@ -165,15 +165,10 @@ class Diacriticals(object):
         titles = sorted([i for i in addition_l if i.startswith('title')])
         tags_ = addition_info.split('|')[::2]
         tags = sorted([i for i in tags_ if len(i)])
-        #print("title: {0}".format(titles))
-        #print("tags: {0}".format(tags))
-        #print("additional: {0}".format(addition_l))
-        #print("="*40)
 
         sorted_addition = ''
         if len(titles):
             for t in titles:
-               # print("remove: {0}".format(t))
                 tags.remove(t)
                 index = addition_l.index(t)
                 title_ = '|' + '|'.join(addition_l[index:index + 2])
@@ -198,8 +193,6 @@ class Diacriticals(object):
             sorted_addition += '|'
 
         if len(tags):
-        #    print(tags)
-        #     sorted_addition += '|'
             for t in tags:
                 sorted_addition += '|'
                 index = addition_l.index(t)
@@ -214,15 +207,10 @@ class Diacriticals(object):
         new_tags = set(new.split('|')[::2])
         new_addition_info_l = new.split('|')
         extra_tags = list(new_tags - tags)
-        # print("addition_info: {0}".format(addition_info))
-        # print("new: {0}".format(new))
-        # print("extra: {0}".format(extra_tags))
         for e in extra_tags:
             e_index = new_addition_info_l.index(e)
             extra_addition_info = '|'.join(new_addition_info_l[e_index:e_index + 2])
             addition_info = addition_info + '|' + extra_addition_info
-        # print("new addition: {0}".format(addition_info))
-        # print("-"*40)
         return addition_info
 
     def diacritical_report(self):
@@ -259,10 +247,9 @@ class Diacriticals(object):
                         else:
                               addition[k] = row['addition']
 
-                        print("before sort {0}: {1}".format(k, row['addition']))
-
+                        self._logger.debug("before sort {0}: {1}".format(k, row['addition']))
                         addition[k] = Diacriticals.sort_addition_info(addition[k])
-                        print("after sort: {0}".format(addition[k]))
+                        self._logger.debug("after sort: {0}".format(addition[k]))
 
         self._logger.info("{0} child reports are in {1}".format(child_report_count, children_dir))
         count = OrderedDict(sorted(count.items(), key=lambda t:t[1], reverse=True))
