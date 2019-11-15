@@ -6,15 +6,13 @@ import os
 
 from lxml import etree
 
-from diacriticals import *
-
 class ExtractTool(object):
     def __init__(self):
         super(ExtractTool, self).__init__()
 
     def nodes(self, path, xpath):
         p = os.path.normpath(path)
-        with open("./extract_result.csv", 'w') as r:
+        with open("./extract_result.csv", 'a') as r:
             csv_writer = csv.writer(r)
             with gzip.open(p, 'rb') as src:
                 for i in src:
