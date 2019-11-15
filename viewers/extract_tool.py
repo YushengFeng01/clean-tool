@@ -34,7 +34,7 @@ class ExtractTool(object):
                 # ARCI
                 self.nodes(i.strip(), "/REC/static_data/summary/titles/title[@transliterated=\'Y\'][@type=\'item\']")
                 # SUPERUNIF
-                self.nodes(i.strip(), "/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/titles/title[@transliterated=\'Y\'][@type=\'item\']"))
+                self.nodes(i.strip(), "/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/titles/title[@transliterated=\'Y\'][@type=\'item\']")
 
 
 
