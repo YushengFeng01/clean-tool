@@ -31,7 +31,10 @@ class ExtractTool(object):
         p = os.path.normpath(path)
         with open(p, 'r') as src:
             for i in src:
+                # ARCI
                 self.nodes(i.strip(), "/REC/static_data/summary/titles/title[@transliterated=\'Y\'][@type=\'item\']")
+                # SUPERUNIF
+                self.nodes(i.strip(, "/REC/static_data/specific_content[@coll_id=\'ARCI\']/summary/titles/title[@transliterated=\'Y\'][@type=\'item\']"))
 
 
 
