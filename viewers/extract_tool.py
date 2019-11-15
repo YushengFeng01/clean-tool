@@ -23,7 +23,7 @@ class ExtractTool(object):
                     elements = tree.xpath(xpath)
                     if len(elements):
                         for e in elements:
-                            text = e[0].text
+                            text = e.text
                             text = text.encode('utf-8') if isinstance(text, unicode) else text
                             csv_writer.writerow([text, path])
 
